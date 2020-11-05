@@ -1,8 +1,9 @@
 import React from "react"
-import { useQuery } from "@apollo/client"
+import { useQuery, useLazyQuery } from "@apollo/client"
 import Dropdown from "./Dropdown"
+import StrainCatalogList from "./StrainCatalogList"
 import useSearchQuery from "./hooks/useSearchQuery"
-import { GET_STRAIN_LIST } from "./graphql/queries"
+import { GET_STRAIN_LIST, GET_BACTERIAL_STRAIN_LIST } from "./graphql/queries"
 
 const StrainCatalog = () => {
   const query = useSearchQuery()
@@ -14,6 +15,10 @@ const StrainCatalog = () => {
       filter: "",
     },
   })
+  const [getStrains, strainResult] = useLazyQuery(GET_STRAIN_LIST)
+  const [getStrainList, bacterialResult] = useLazyQuery(
+    GET_BACTERIAL_STRAIN_LIST,
+  )
 
   React.useEffect(() => {
     console.log("render", searchTerm)
@@ -27,14 +32,20 @@ const StrainCatalog = () => {
     return <div>got error :(</div>
   }
 
+  let strains = []
+  if (data && data.listStrains) {
+    strains = data.listStrains.strains
+  }
+  if (data && data.listStrainsWithAnnotation) {
+    strains = data.listStrainsWithAnnotation.strains
+  }
+
   return (
     <div>
       <Dropdown />
       <div>search query is {searchTerm}</div>
       <div>
-        {data.listStrains.strains.map((item: any) => (
-          <p key={item.id}>{item.id}</p>
-        ))}
+        <StrainCatalogList data={strains} />
       </div>
     </div>
   )

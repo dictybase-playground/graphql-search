@@ -24,14 +24,7 @@ const Dropdown = () => {
 
   return (
     <FormControl className={classes.form}>
-      <Select
-        native
-        value={searchTerm}
-        onChange={handleChange}
-        inputProps={{
-          name: "search",
-          id: "search-filter",
-        }}>
+      <Select native value={searchTerm} onChange={handleChange}>
         <option value="all">All</option>
         <option value="bacterial">Bacterial Strains</option>
       </Select>
