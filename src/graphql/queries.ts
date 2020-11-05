@@ -35,6 +35,42 @@ const GET_STRAIN_LIST_WITH_PHENOTYPE = gql`
   }
 `
 
+const GET_BACTERIAL_STRAIN_LIST = gql`
+  query ListBacterialStrains() {
+    bacterialFoodSource: listStrainsWithAnnotation(
+      cursor: 0
+      limit: 100
+      type: "characteristic"
+      annotation: "bacterial food source"
+    ) {
+      totalCount
+      nextCursor
+      strains {
+        id
+        label
+        summary
+        in_stock
+      }
+    }
+    
+    symbioticFarmerBacterium: listStrainsWithAnnotation(
+      cursor: 0
+      limit: 100
+      type: "characteristic"
+      annotation: "symbiotic farmer bacterium"
+    ) {
+      totalCount
+      nextCursor
+      strains {
+        id
+        label
+        summary
+        in_stock
+      }
+    }
+  }
+`
+
 const GET_STRAIN_LIST = gql`
   query StrainList($cursor: Int!, $limit: Int!, $filter: String!) {
     listStrains(cursor: $cursor, limit: $limit, filter: $filter) {
@@ -65,4 +101,9 @@ const GET_PLASMID_LIST = gql`
   }
 `
 
-export { GET_STRAIN_LIST_WITH_PHENOTYPE, GET_STRAIN_LIST, GET_PLASMID_LIST }
+export {
+  GET_STRAIN_LIST_WITH_PHENOTYPE,
+  GET_BACTERIAL_STRAIN_LIST,
+  GET_STRAIN_LIST,
+  GET_PLASMID_LIST,
+}
