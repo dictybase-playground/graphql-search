@@ -1,21 +1,39 @@
 import React from "react"
 import { ApolloProvider } from "@apollo/client"
-import { BrowserRouter } from "react-router-dom"
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles"
+import { BrowserRouter, Link } from "react-router-dom"
+import { makeStyles } from "@material-ui/core/styles"
+import Container from "@material-ui/core/Container"
+import Routes from "./Routes"
 import useApolloClient from "./hooks/useApolloClient"
 
-const theme = createMuiTheme({})
+const useStyles = makeStyles({
+  container: {
+    paddingTop: "20px",
+    "& a": {
+      paddingRight: "15px",
+    },
+  },
+  navbar: {
+    marginBottom: "20px",
+  },
+})
 
 const App = () => {
   const apolloClient = useApolloClient()
+  const classes = useStyles()
 
   return (
     <ApolloProvider client={apolloClient}>
-      <MuiThemeProvider theme={theme}>
-        <BrowserRouter>
-          <div>This is the main App component</div>
-        </BrowserRouter>
-      </MuiThemeProvider>
+      <BrowserRouter>
+        <Container maxWidth="md" className={classes.container}>
+          <div>
+            <strong>Strain Lists: </strong>
+            <Link to="/strains?search=all">All</Link>
+            <Link to="/strains?search=bacterial">Bacterial</Link>
+          </div>
+          <Routes />
+        </Container>
+      </BrowserRouter>
     </ApolloProvider>
   )
 }
