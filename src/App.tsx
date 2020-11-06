@@ -26,11 +26,6 @@ const App = () => {
     <ApolloProvider client={apolloClient}>
       <BrowserRouter>
         <Container maxWidth="md" className={classes.container}>
-          <div>
-            <strong>Strain Lists: </strong>
-            <Link to="/strains?search=all">All</Link>
-            <Link to="/strains?search=bacterial">Bacterial</Link>
-          </div>
           <Routes />
         </Container>
       </BrowserRouter>

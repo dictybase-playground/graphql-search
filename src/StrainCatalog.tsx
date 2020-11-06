@@ -1,48 +1,99 @@
 import React from "react"
-import { useQuery, useLazyQuery } from "@apollo/client"
-import Dropdown from "./Dropdown"
+import { useLazyQuery } from "@apollo/client"
+import { useHistory } from "react-router-dom"
+import { makeStyles } from "@material-ui/core/styles"
+import FormControl from "@material-ui/core/FormControl"
+import Select from "@material-ui/core/Select"
 import StrainCatalogList from "./StrainCatalogList"
 import useSearchQuery from "./hooks/useSearchQuery"
 import { GET_STRAIN_LIST, GET_BACTERIAL_STRAIN_LIST } from "./graphql/queries"
 
+const useStyles = makeStyles({
+  form: {
+    marginBottom: "20px",
+  },
+})
+
 const StrainCatalog = () => {
   const query = useSearchQuery()
-  const searchTerm = query.get("search")
-  const { loading, error, data } = useQuery(GET_STRAIN_LIST, {
-    variables: {
-      cursor: 0,
-      limit: 10,
-      filter: "",
+  const params = query.get("search")
+  const [shownData, setShownData] = React.useState<any>(null)
+  const [getStrains, strainResult] = useLazyQuery(GET_STRAIN_LIST, {
+    onCompleted: (data) => {
+      setShownData(data)
     },
+    onError: (error) => console.log(error),
   })
-  const [getStrains, strainResult] = useLazyQuery(GET_STRAIN_LIST)
-  const [getStrainList, bacterialResult] = useLazyQuery(
+  const [getBacterialStrains, bacterialResult] = useLazyQuery(
     GET_BACTERIAL_STRAIN_LIST,
+    {
+      onCompleted: (data) => {
+        const mergedData = {
+          listStrainsWithAnnotation: {
+            __typename: data.bacterialFoodSource.__typename,
+            nextCursor: 0,
+            totalCount:
+              data.bacterialFoodSource.totalCount +
+              data.symbioticFarmerBacterium.totalCount,
+            strains: [
+              ...data.bacterialFoodSource.strains,
+              ...data.symbioticFarmerBacterium.strains,
+            ],
+          },
+        }
+        setShownData(mergedData)
+      },
+      onError: (error) => console.log(error),
+    },
   )
+  const classes = useStyles()
+  const history = useHistory()
+  const [searchTerm, setSearchTerm] = React.useState(params)
+
+  const handleChange = (
+    event: React.ChangeEvent<{ name?: string; value: any }>,
+  ) => {
+    history.push(`/strains?search=${event.target.value}`)
+    setSearchTerm(event.target.value)
+  }
 
   React.useEffect(() => {
-    console.log("render", searchTerm)
-  }, [searchTerm])
-
-  if (loading) {
-    return <div>loading...</div>
-  }
-
-  if (error) {
-    return <div>got error :(</div>
-  }
+    switch (searchTerm) {
+      case "all":
+        getStrains({ variables: { cursor: 0, limit: 10, filter: "" } })
+        break
+      case "bacterial":
+        getBacterialStrains()
+        break
+      default:
+        console.log("not a search term")
+    }
+  }, [
+    getStrains,
+    getBacterialStrains,
+    setShownData,
+    searchTerm,
+    shownData,
+    bacterialResult.data,
+    strainResult.data,
+  ])
 
   let strains = []
-  if (data && data.listStrains) {
-    strains = data.listStrains.strains
+  if (shownData && shownData.listStrains) {
+    strains = shownData.listStrains.strains
   }
-  if (data && data.listStrainsWithAnnotation) {
-    strains = data.listStrainsWithAnnotation.strains
+  if (shownData && shownData.listStrainsWithAnnotation) {
+    strains = shownData.listStrainsWithAnnotation.strains
   }
 
   return (
     <div>
-      <Dropdown />
+      <FormControl className={classes.form}>
+        <Select native value={searchTerm} onChange={handleChange}>
+          <option value="all">All</option>
+          <option value="bacterial">Bacterial Strains</option>
+        </Select>
+      </FormControl>
       <div>search query is {searchTerm}</div>
       <div>
         <StrainCatalogList data={strains} />
