@@ -36,7 +36,7 @@ const GET_STRAIN_LIST_WITH_PHENOTYPE = gql`
 `
 
 const GET_BACTERIAL_STRAIN_LIST = gql`
-  query ListBacterialStrains() {
+  query ListBacterialStrains {
     bacterialFoodSource: listStrainsWithAnnotation(
       cursor: 0
       limit: 100
@@ -52,7 +52,7 @@ const GET_BACTERIAL_STRAIN_LIST = gql`
         in_stock
       }
     }
-    
+
     symbioticFarmerBacterium: listStrainsWithAnnotation(
       cursor: 0
       limit: 100
