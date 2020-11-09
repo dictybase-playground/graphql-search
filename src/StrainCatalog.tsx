@@ -1,9 +1,33 @@
 import React from "react"
 import { useApolloClient } from "@apollo/client"
+import CircularProgress from "@material-ui/core/CircularProgress"
 import Dropdown from "./Dropdown"
 import StrainCatalogList from "./StrainCatalogList"
 import useSearchQuery from "./hooks/useSearchQuery"
 import { GET_STRAIN_LIST, GET_BACTERIAL_STRAIN_LIST } from "./graphql/queries"
+
+const dropdownItems = [
+  {
+    name: "All Strains",
+    value: "all",
+  },
+  {
+    name: "Bacterial Strains",
+    value: "bacterial",
+  },
+  // {
+  //   name: "GWDI Strains",
+  //   value: "",
+  // },
+  // {
+  //   name: "Available Strains",
+  //   value: "",
+  // },
+  // {
+  //   name: "Unavailable Strains",
+  //   value: "",
+  // },
+]
 
 const normalizeBacterialStrainsData = (data: any) => {
   return {
@@ -29,6 +53,12 @@ const StrainCatalog = () => {
   const [error, setError] = React.useState<any>(null)
   const [shownData, setShownData] = React.useState<any>(null)
   const [searchTerm, setSearchTerm] = React.useState(params)
+
+  React.useEffect(() => {
+    if (params !== searchTerm) {
+      setSearchTerm(params)
+    }
+  }, [searchTerm, params])
 
   React.useEffect(() => {
     const updateData = async () => {
@@ -74,7 +104,7 @@ const StrainCatalog = () => {
     content = <StrainCatalogList data={shownData.listStrains.strains} />
   }
   if (loading) {
-    content = <div>loading...</div>
+    content = <CircularProgress />
   }
   if (error) {
     content = <div>got an error :(</div>
@@ -82,7 +112,11 @@ const StrainCatalog = () => {
 
   return (
     <div>
-      <Dropdown searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <Dropdown
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        items={dropdownItems}
+      />
       <div>search query is {searchTerm}</div>
       <div>{content}</div>
     </div>

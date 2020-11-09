@@ -13,9 +13,13 @@ const useStyles = makeStyles({
 type Props = {
   searchTerm: string | null
   setSearchTerm: (arg0: string) => void
+  items: Array<{
+    name: string
+    value: string
+  }>
 }
 
-const Dropdown = ({ searchTerm, setSearchTerm }: Props) => {
+const Dropdown = ({ searchTerm, setSearchTerm, items }: Props) => {
   const classes = useStyles()
   const history = useHistory()
 
@@ -29,8 +33,11 @@ const Dropdown = ({ searchTerm, setSearchTerm }: Props) => {
   return (
     <FormControl className={classes.form}>
       <Select native value={searchTerm} onChange={handleChange}>
-        <option value="all">All</option>
-        <option value="bacterial">Bacterial Strains</option>
+        {items.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.name}
+          </option>
+        ))}
       </Select>
     </FormControl>
   )
