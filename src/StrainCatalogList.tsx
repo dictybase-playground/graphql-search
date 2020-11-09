@@ -1,6 +1,6 @@
 import React from "react"
 
-const StrainCatalog = ({ data }: any) => {
+const StrainCatalogList = ({ data }: any) => {
   return (
     <div>
       {data.map((item: any) => (
@@ -10,4 +10,4 @@ const StrainCatalog = ({ data }: any) => {
   )
 }
 
-export default StrainCatalog
+export default StrainCatalogList
