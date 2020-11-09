@@ -8,6 +8,22 @@ import StrainCatalogList from "./StrainCatalogList"
 import useSearchQuery from "./hooks/useSearchQuery"
 import { GET_STRAIN_LIST, GET_BACTERIAL_STRAIN_LIST } from "./graphql/queries"
 
+const normalizeBacterialStrainsData = (data: any) => {
+  return {
+    listStrains: {
+      __typename: data.bacterialFoodSource.__typename,
+      nextCursor: 0,
+      totalCount:
+        data.bacterialFoodSource.totalCount +
+        data.symbioticFarmerBacterium.totalCount,
+      strains: [
+        ...data.bacterialFoodSource.strains,
+        ...data.symbioticFarmerBacterium.strains,
+      ],
+    },
+  }
+}
+
 const useStyles = makeStyles({
   form: {
     marginBottom: "20px",
@@ -56,19 +72,7 @@ const StrainCatalog = () => {
           } = await client.query({
             query: GET_BACTERIAL_STRAIN_LIST,
           })
-          const mergedData = {
-            listStrainsWithAnnotation: {
-              __typename: bacterialStrainData.bacterialFoodSource.__typename,
-              nextCursor: 0,
-              totalCount:
-                bacterialStrainData.bacterialFoodSource.totalCount +
-                bacterialStrainData.symbioticFarmerBacterium.totalCount,
-              strains: [
-                ...bacterialStrainData.bacterialFoodSource.strains,
-                ...bacterialStrainData.symbioticFarmerBacterium.strains,
-              ],
-            },
-          }
+          const mergedData = normalizeBacterialStrainsData(bacterialStrainData)
           setShownData(mergedData)
           setLoading(false)
           setError(bacterialStrainError)
@@ -81,20 +85,15 @@ const StrainCatalog = () => {
     updateData()
   }, [client, searchTerm])
 
-  let strains = []
-  if (shownData && shownData.listStrains) {
-    strains = shownData.listStrains.strains
-  }
-  if (shownData && shownData.listStrainsWithAnnotation) {
-    strains = shownData.listStrainsWithAnnotation.strains
-  }
-
-  let content = <StrainCatalogList data={strains} />
+  let content = <div />
   if (loading) {
     content = <div>loading...</div>
   }
   if (error) {
     content = <div>got an error :(</div>
+  }
+  if (shownData) {
+    content = <StrainCatalogList data={shownData.listStrains.strains} />
   }
 
   return (
