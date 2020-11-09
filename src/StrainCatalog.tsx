@@ -70,14 +70,14 @@ const StrainCatalog = () => {
   }, [client, searchTerm])
 
   let content = <div />
+  if (shownData) {
+    content = <StrainCatalogList data={shownData.listStrains.strains} />
+  }
   if (loading) {
     content = <div>loading...</div>
   }
   if (error) {
     content = <div>got an error :(</div>
-  }
-  if (shownData) {
-    content = <StrainCatalogList data={shownData.listStrains.strains} />
   }
 
   return (
