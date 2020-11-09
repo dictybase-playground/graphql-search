@@ -1,5 +1,5 @@
 import React from "react"
-import { useLazyQuery } from "@apollo/client"
+import { useApolloClient } from "@apollo/client"
 import { useHistory } from "react-router-dom"
 import { makeStyles } from "@material-ui/core/styles"
 import FormControl from "@material-ui/core/FormControl"
@@ -17,35 +17,10 @@ const useStyles = makeStyles({
 const StrainCatalog = () => {
   const query = useSearchQuery()
   const params = query.get("search")
+  const client = useApolloClient()
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<any>(null)
   const [shownData, setShownData] = React.useState<any>(null)
-  const [getStrains, strainResult] = useLazyQuery(GET_STRAIN_LIST, {
-    onCompleted: (data) => {
-      setShownData(data)
-    },
-    onError: (error) => console.log(error),
-  })
-  const [getBacterialStrains, bacterialResult] = useLazyQuery(
-    GET_BACTERIAL_STRAIN_LIST,
-    {
-      onCompleted: (data) => {
-        const mergedData = {
-          listStrainsWithAnnotation: {
-            __typename: data.bacterialFoodSource.__typename,
-            nextCursor: 0,
-            totalCount:
-              data.bacterialFoodSource.totalCount +
-              data.symbioticFarmerBacterium.totalCount,
-            strains: [
-              ...data.bacterialFoodSource.strains,
-              ...data.symbioticFarmerBacterium.strains,
-            ],
-          },
-        }
-        setShownData(mergedData)
-      },
-      onError: (error) => console.log(error),
-    },
-  )
   const classes = useStyles()
   const history = useHistory()
   const [searchTerm, setSearchTerm] = React.useState(params)
@@ -58,25 +33,53 @@ const StrainCatalog = () => {
   }
 
   React.useEffect(() => {
-    switch (searchTerm) {
-      case "all":
-        getStrains({ variables: { cursor: 0, limit: 10, filter: "" } })
-        break
-      case "bacterial":
-        getBacterialStrains()
-        break
-      default:
-        console.log("not a search term")
+    const updateData = async () => {
+      switch (searchTerm) {
+        case "all":
+          setLoading(true)
+          const {
+            data: listStrainData,
+            error: listStrainError,
+          } = await client.query({
+            query: GET_STRAIN_LIST,
+            variables: { cursor: 0, limit: 10, filter: "" },
+          })
+          setShownData(listStrainData)
+          setLoading(false)
+          setError(listStrainError)
+          break
+        case "bacterial":
+          setLoading(true)
+          const {
+            data: bacterialStrainData,
+            error: bacterialStrainError,
+          } = await client.query({
+            query: GET_BACTERIAL_STRAIN_LIST,
+          })
+          const mergedData = {
+            listStrainsWithAnnotation: {
+              __typename: bacterialStrainData.bacterialFoodSource.__typename,
+              nextCursor: 0,
+              totalCount:
+                bacterialStrainData.bacterialFoodSource.totalCount +
+                bacterialStrainData.symbioticFarmerBacterium.totalCount,
+              strains: [
+                ...bacterialStrainData.bacterialFoodSource.strains,
+                ...bacterialStrainData.symbioticFarmerBacterium.strains,
+              ],
+            },
+          }
+          setShownData(mergedData)
+          setLoading(false)
+          setError(bacterialStrainError)
+          break
+        default:
+          console.log("not a search term")
+      }
     }
-  }, [
-    getStrains,
-    getBacterialStrains,
-    setShownData,
-    searchTerm,
-    shownData,
-    bacterialResult.data,
-    strainResult.data,
-  ])
+
+    updateData()
+  }, [client, searchTerm])
 
   let strains = []
   if (shownData && shownData.listStrains) {
@@ -84,6 +87,14 @@ const StrainCatalog = () => {
   }
   if (shownData && shownData.listStrainsWithAnnotation) {
     strains = shownData.listStrainsWithAnnotation.strains
+  }
+
+  let content = <StrainCatalogList data={strains} />
+  if (loading) {
+    content = <div>loading...</div>
+  }
+  if (error) {
+    content = <div>got an error :(</div>
   }
 
   return (
@@ -95,9 +106,7 @@ const StrainCatalog = () => {
         </Select>
       </FormControl>
       <div>search query is {searchTerm}</div>
-      <div>
-        <StrainCatalogList data={strains} />
-      </div>
+      <div>{content}</div>
     </div>
   )
 }
