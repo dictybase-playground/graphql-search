@@ -1,9 +1,6 @@
 import React from "react"
 import { useApolloClient } from "@apollo/client"
-import { useHistory } from "react-router-dom"
-import { makeStyles } from "@material-ui/core/styles"
-import FormControl from "@material-ui/core/FormControl"
-import Select from "@material-ui/core/Select"
+import Dropdown from "./Dropdown"
 import StrainCatalogList from "./StrainCatalogList"
 import useSearchQuery from "./hooks/useSearchQuery"
 import { GET_STRAIN_LIST, GET_BACTERIAL_STRAIN_LIST } from "./graphql/queries"
@@ -24,12 +21,6 @@ const normalizeBacterialStrainsData = (data: any) => {
   }
 }
 
-const useStyles = makeStyles({
-  form: {
-    marginBottom: "20px",
-  },
-})
-
 const StrainCatalog = () => {
   const query = useSearchQuery()
   const params = query.get("search")
@@ -37,16 +28,7 @@ const StrainCatalog = () => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<any>(null)
   const [shownData, setShownData] = React.useState<any>(null)
-  const classes = useStyles()
-  const history = useHistory()
   const [searchTerm, setSearchTerm] = React.useState(params)
-
-  const handleChange = (
-    event: React.ChangeEvent<{ name?: string; value: any }>,
-  ) => {
-    history.push(`/strains?search=${event.target.value}`)
-    setSearchTerm(event.target.value)
-  }
 
   React.useEffect(() => {
     const updateData = async () => {
@@ -72,8 +54,10 @@ const StrainCatalog = () => {
           } = await client.query({
             query: GET_BACTERIAL_STRAIN_LIST,
           })
-          const mergedData = normalizeBacterialStrainsData(bacterialStrainData)
-          setShownData(mergedData)
+          const normalizedData = normalizeBacterialStrainsData(
+            bacterialStrainData,
+          )
+          setShownData(normalizedData)
           setLoading(false)
           setError(bacterialStrainError)
           break
@@ -98,12 +82,7 @@ const StrainCatalog = () => {
 
   return (
     <div>
-      <FormControl className={classes.form}>
-        <Select native value={searchTerm} onChange={handleChange}>
-          <option value="all">All</option>
-          <option value="bacterial">Bacterial Strains</option>
-        </Select>
-      </FormControl>
+      <Dropdown searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       <div>search query is {searchTerm}</div>
       <div>{content}</div>
     </div>
