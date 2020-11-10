@@ -24,3 +24,7 @@
 [![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,DSC/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9438930)
 
 Demo app to experiment with searching using GraphQL.
+
+This has a working example of a dropdown menu that changes the URL and issues a GraphQL query upon selection. To fetch the
+data, I opted to use `client.query` directly since it returns a promise. This lets us manually set loading/error states when
+the query is being issued. My first thought was to use `useLazyQuery` and call the query that way, but that does not return a promise.
